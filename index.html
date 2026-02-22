@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HilalYolu</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--ana:#0B1C2D;
+--yesil:#1E5631;
+--altin:#D4AF37;
+--beyaz:#f4f4f4;
+}
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:var(--ana);
+color:var(--beyaz);
+transition:0.4s;
+}
+
+header{
+background:linear-gradient(45deg,var(--yesil),var(--ana));
+padding:20px;
+text-align:center;
+font-size:28px;
+font-weight:700;
+letter-spacing:2px;
+}
+
+nav{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+background:#081520;
+}
+
+nav button{
+background:none;
+border:none;
+color:white;
+padding:15px 20px;
+cursor:pointer;
+font-weight:500;
+transition:0.3s;
+}
+
+nav button:hover{
+background:var(--yesil);
+}
+
+section{
+display:none;
+padding:40px;
+animation:fade 0.5s ease-in-out;
+}
+
+.active{
+display:block;
+}
+
+.card{
+background:#13283d;
+padding:20px;
+border-radius:12px;
+margin:15px 0;
+box-shadow:0 5px 15px rgba(0,0,0,0.3);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+.arabic{
+font-family:'Amiri',serif;
+font-size:22px;
+text-align:right;
+direction:rtl;
+}
+
+.darkmode{
+background:#111 !important;
+}
+
+.toggle{
+position:fixed;
+top:15px;
+right:15px;
+background:var(--altin);
+border:none;
+padding:10px;
+border-radius:8px;
+cursor:pointer;
+}
+
+#compass{
+width:200px;
+height:200px;
+border:5px solid gold;
+border-radius:50%;
+margin:20px auto;
+position:relative;
+transition:transform 0.2s linear;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(10px);}
+to{opacity:1;transform:translateY(0);}
+}
+</style>
+</head>
+
+<body>
+
+<header>HilalYolu 🌙</header>
+<button class="toggle" onclick="toggleDark()">🌙</button>
+
+<nav>
+<button onclick="show('islam')">İslam</button>
+<button onclick="show('turk')">Türklük</button>
+<button onclick="show('genc')">Gençlik</button>
+<button onclick="show('arac')">Araçlar</button>
+</nav>
+
+<section id="islam" class="active">
+<h2>İslam Bölümü</h2>
+<div class="card"><h3>Namaz</h3><p>Sabah 2, Öğle 4, İkindi 4, Akşam 3, Yatsı 4 farz rekattır.</p></div>
+<div class="card"><h3>Kur'an</h3><p class="arabic">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّح۪يمِ</p></div>
+<div class="card"><h3>İslam’ın 5 Şartı</h3><ul><li>Şehadet</li><li>Namaz</li><li>Oruç</li><li>Zekat</li><li>Hac</li></ul></div>
+</section>
+
+<section id="turk">
+<h2>Türklük</h2>
+<div class="card"><p>Orta Asya'dan Anadolu'ya uzanan Türk tarihi.</p></div>
+</section>
+
+<section id="genc">
+<h2>Gençlik</h2>
+<div class="card"><p>Günün Ayeti: Allah sabredenlerle beraberdir.</p></div>
+</section>
+
+<section id="arac">
+<h2>Pratik Araçlar</h2>
+
+<div class="card">
+<h3>Zikir Sayacı</h3>
+<button onclick="zikir()">+1</button>
+<p id="zikirSayac">0</p>
+</div>
+
+<div class="card">
+<h3>Namaz Vakitleri (Yazarak 81 İl)</h3>
+<input type="text" id="cityInput" placeholder="İl yazınız (örn: Adana)" style="padding:10px;width:100%;border-radius:8px;border:none;margin-bottom:10px;">
+<button onclick="getCityPrayerTimes()">Vakitleri Getir</button>
+<div id="cityVakitler"></div>
+</div>
+
+<div class="card">
+<h3>Gerçek Zamanlı Kıble Pusulası</h3>
+<p>Telefonu düz tut ve hareket ettir</p>
+<div id="compass"></div>
+<p id="kibleBilgi">Kıble hesaplanıyor...</p>
+</div>
+
+</section>
+
+<script>
+
+function show(id){
+document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function toggleDark(){
+document.body.classList.toggle("darkmode");
+}
+
+let sayac=0;
+function zikir(){
+sayac++;
+document.getElementById("zikirSayac").innerText=sayac;
+}
+
+/* 81 İL VAKİT */
+
+async function getCityPrayerTimes(){
+let city=document.getElementById("cityInput").value.trim();
+if(!city){ alert("İl yazınız"); return; }
+
+try{
+let res=await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Turkey&method=13`);
+let data=await res.json();
+if(data.code!==200){
+document.getElementById("cityVakitler").innerHTML="İl bulunamadı";
+return;
+}
+let t=data.data.timings;
+document.getElementById("cityVakitler").innerHTML=`
+<p>İmsak: ${t.Fajr}</p>
+<p>Güneş: ${t.Sunrise}</p>
+<p>Öğle: ${t.Dhuhr}</p>
+<p>İkindi: ${t.Asr}</p>
+<p>Akşam: ${t.Maghrib}</p>
+<p>Yatsı: ${t.Isha}</p>
+`;
+}catch(e){
+document.getElementById("cityVakitler").innerHTML="Hata oluştu";
+}
+}
+
+/* KIBLE */
+
+const KABE_LAT=21.4225;
+const KABE_LON=39.8262;
+
+let userLat=0;
+let userLon=0;
+let kibleAngle=0;
+
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(pos=>{
+userLat=pos.coords.latitude;
+userLon=pos.coords.longitude;
+calculateQibla();
+});
+}
+
+function calculateQibla(){
+let φ1=userLat*Math.PI/180;
+let φ2=KABE_LAT*Math.PI/180;
+let Δλ=(KABE_LON-userLon)*Math.PI/180;
+
+let y=Math.sin(Δλ);
+let x=Math.cos(φ1)*Math.tan(φ2)-Math.sin(φ1)*Math.cos(Δλ);
+
+let θ=Math.atan2(y,x);
+kibleAngle=(θ*180/Math.PI+360)%360;
+
+document.getElementById("kibleBilgi").innerText="Kıble Açısı: "+kibleAngle.toFixed(2)+"°";
+}
+
+if(window.DeviceOrientationEvent){
+window.addEventListener("deviceorientation",function(e){
+if(e.alpha!==null){
+let rotation=e.alpha-kibleAngle;
+document.getElementById("compass").style.transform=`rotate(${rotation}deg)`;
+}
+});
+}
+
+</script>
+</body>
+</html>
